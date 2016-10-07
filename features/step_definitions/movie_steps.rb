@@ -28,7 +28,7 @@ Given /^I am on the RottenPotatoes home page$/ do
    click_on "More about #{title}"
  end
 
- Then /^(?:|I )should see "([^"]*)"$/ do |text|
+ Then /^(?:|I )should see "(.*?)"$/ do |text|
     expect(page).to have_content(text)
  end
 
@@ -46,29 +46,94 @@ Given /^I am on the RottenPotatoes home page$/ do
 # Add a declarative step here for populating the DB with movies.
 
 Given /the following movies have been added to RottenPotatoes:/ do |movies_table|
-  pending  # Remove this statement when you finish implementing the test step
+  #pending  # Remove this statement when you finish implementing the test step
+  @movie_count=0
   movies_table.hashes.each do |movie|
+    Movie.create movie
     # Each returned movie will be a hash representing one row of the movies_table
     # The keys will be the table headers and the values will be the row contents.
     # Entries can be directly to the database with ActiveRecord methods
     # Add the necessary Active Record call(s) to populate the database.
+    @movie_count+= 1
   end
 end
 
-When /^I have opted to see movies rated: "(.*?)"$/ do |arg1|
+When /^I have opted to see movies rated: "(.*?)"$/ do |rating_list|
+  
+  rating_list.split(', ').each do |rating|
+    page.check('ratings_'+rating)
+  end
+  
   # HINT: use String#split to split up the rating_list, then
   # iterate over the ratings and check/uncheck the ratings
+  
   # using the appropriate Capybara command(s)
-  pending  #remove this statement after implementing the test step
+  #pending  #remove this statement after implementing the test step
 end
 
-Then /^I should see only movies rated: "(.*?)"$/ do |arg1|
-  pending  #remove this statement after implementing the test step
+Then /^I should see only movies rated: "(.*?)"$/ do |rating|
+  #pending  #remove this statement after implementing the test step
+  ratings_array = Movie.all_ratings
+  check = false
+  rating.split(', ').each do |cur_rating|
+    #iterate over array of all rating 
+    if ratings_array.include?(cur_rating)
+        ratings_array.delete(cur_rating)
+    end
+  end
+  
+  rating.split(', ').each do |cur_rating|
+    #iterate over array of all rating 
+    if ratings_array.include?(cur_rating)
+      check = false
+    else
+      check = true
+    end
+  end
+  
+  expect(check).to be_truthy
+  
+
 end
 
 Then /^I should see all of the movies$/ do
-  pending  #remove this statement after implementing the test step
+  movies_displayed = 0;
+  check =false
+  Movie.all.each do |movie|
+    movies_displayed+=1
+  end
+  #pending  #remove this statement after implementing the test step
+  if movies_displayed == @movie_count
+    check = true
+  end
+  
+  expect(check).to be_truthy
 end
 
 
+
+When /^I follow "(.*?)"$/ do |sort_option|
+  if sort_option == 'Movie Title'
+    click_on("title_header")
+  end
+  
+  if sort_option == 'R Date'
+    click_on("release_date_header")
+  end
+end
+
+Then /^I should see the page "(.*?)" before "(.*?)"$/ do |string1, string2|
+  pageString = page.body.to_s
+  check=false
+  
+  if pageString.index(string1)!= nil && pageString.index(string2) !=nil
+    if pageString.index(string1) < pageString.index(string2)
+      check =true
+    else
+      check =false
+    end
+  end
+  
+  expect(check).to be_truthy
+end
 
